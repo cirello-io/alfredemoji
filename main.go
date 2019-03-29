@@ -24,7 +24,6 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -78,20 +77,13 @@ type snippet struct {
 	} `json:"alfredsnippet"`
 }
 
-func (s snippet) fn() string {
-	return fmt.Sprintf("%v [%v].json", s.Snippet.Name, s.Snippet.UID)
-}
-
-func (s snippet) marshal(w io.Writer) error {
-	return json.NewEncoder(w).Encode(s)
-}
-
 func (s snippet) store(zipFD *zip.Writer) error {
-	w, err := zipFD.Create(s.fn())
+	fn := fmt.Sprintf("%v [%v].json", s.Snippet.Name, s.Snippet.UID)
+	w, err := zipFD.Create(fn)
 	if err != nil {
 		return fmt.Errorf("cannot create file in zip: %v", err)
 	}
-	if err := s.marshal(w); err != nil {
+	if err := json.NewEncoder(w).Encode(s); err != nil {
 		return fmt.Errorf("cannot write file in zip: %v", err)
 	}
 	if err := zipFD.Flush(); err != nil {
