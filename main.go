@@ -16,7 +16,7 @@ limitations under the License.
 
 // Command alfredemoji downloads Unicode emoji files and generates an Alfre3
 // compatible emoji snippet pack.
-package main
+package main // import "cirello.io/alfredemoji"
 
 import (
 	"archive/zip"
