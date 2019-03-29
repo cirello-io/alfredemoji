@@ -89,13 +89,13 @@ func (s snippet) marshal(w io.Writer) error {
 func (s snippet) store(zipFD *zip.Writer) error {
 	w, err := zipFD.Create(s.fn())
 	if err != nil {
-		return fmt.Errorf("cannot create file in zip: %w", err)
+		return fmt.Errorf("cannot create file in zip: %v", err)
 	}
 	if err := s.marshal(w); err != nil {
-		return fmt.Errorf("cannot write file in zip: %w", err)
+		return fmt.Errorf("cannot write file in zip: %v", err)
 	}
 	if err := zipFD.Flush(); err != nil {
-		return fmt.Errorf("cannot flush after file creation in zip: %w", err)
+		return fmt.Errorf("cannot flush after file creation in zip: %v", err)
 	}
 	return nil
 }
