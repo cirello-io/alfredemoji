@@ -50,7 +50,7 @@ func main() {
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
 		l := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(l, "#") || l == "" || !strings.Contains(l, "fully-qualified") {
+		if strings.HasPrefix(l, "#") || l == "" || !strings.Contains(l, "; fully-qualified") {
 			continue
 		}
 		parts := strings.SplitN(l[strings.Index(l, "# ")+2:], " ", 2)
