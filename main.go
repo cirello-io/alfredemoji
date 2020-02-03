@@ -30,7 +30,7 @@ import (
 	"strings"
 )
 
-const unicodeVersion = "12.0"
+const unicodeVersion = "13.0"
 const emojiSetURL = "https://unicode.org/Public/emoji/" + unicodeVersion + "/emoji-test.txt"
 
 func main() {
