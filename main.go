@@ -86,7 +86,7 @@ type snippet struct {
 }
 
 func (s snippet) store(zipFD *zip.Writer) error {
-	fn := fmt.Sprintf("%v [%v].json", s.Snippet.Name, s.Snippet.UID)
+	fn := fmt.Sprintf("%v [%v].json", s.Snippet.UID, s.Snippet.UID)
 	w, err := zipFD.Create(fn)
 	if err != nil {
 		return fmt.Errorf("cannot create file in zip: %v", err)
