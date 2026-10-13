@@ -27,6 +27,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -42,13 +43,16 @@ func main() {
 	defer fd.Close()
 	zipFD := zip.NewWriter(fd)
 	defer zipFD.Close()
-	for name, emojis := range additionalEmojis {
+	aliases := make(map[string][]string)
+	for alias, emojis := range additionalEmojis {
 		for _, emoji := range emojis {
-			s := newSnippet(emoji, name)
-			if err := s.store(zipFD); err != nil {
-				log.Println("cannot store in zip file (", s.Snippet.Name, "):", err)
-			}
+			k := strings.ReplaceAll(emoji, "\uFE0F", "")
+			aliases[k] = append(aliases[k], alias)
 		}
+	}
+	for k, v := range aliases {
+		slices.Sort(v)
+		aliases[k] = slices.Compact(v)
 	}
 	resp, err := http.Get(emojiSetURL)
 	if err != nil {
@@ -61,12 +65,7 @@ func main() {
 		if strings.HasPrefix(l, "#") || l == "" || !strings.Contains(l, "; fully-qualified") {
 			continue
 		}
-		parts := strings.SplitN(l[strings.Index(l, "# ")+2:], " ", 2)
-		if len(parts) != 2 {
-			log.Println("skipping", l)
-		}
-		emoji, name := parts[0], parts[1]
-		s := newSnippet(emoji, name)
+		s := newSnippet(l, aliases)
 		if err := s.store(zipFD); err != nil {
 			log.Println("cannot store in zip file (", s.Snippet.Name, "):", err)
 		}
@@ -100,11 +99,23 @@ func (s snippet) store(zipFD *zip.Writer) error {
 	return nil
 }
 
-func newSnippet(emoji, name string) snippet {
+// newSnippet parses an emoji-test.txt line such as
+// "1F170 FE0F ; fully-qualified # 🅰️ E0.6 A button (blood type)". Aliases are
+// keyed by emoji without U+FE0F because additionalEmojis omits it.
+func newSnippet(line string, aliases map[string][]string) snippet {
+	_, comment, _ := strings.Cut(line, "# ")
+	emoji, versionAndName, _ := strings.Cut(comment, " ")
+	_, name, _ := strings.Cut(versionAndName, " ")
+	nicknames := slices.DeleteFunc(slices.Clone(aliases[strings.ReplaceAll(emoji, "\uFE0F", "")]), func(a string) bool {
+		return strings.EqualFold(a, name)
+	})
 	s := snippet{}
 	s.Snippet.Snippet = emoji
 	s.Snippet.UID = uuid()
-	s.Snippet.Name = name
+	s.Snippet.Name = emoji + " " + name
+	if len(nicknames) > 0 {
+		s.Snippet.Name += " · " + strings.Join(nicknames, ", ")
+	}
 	normalizedName := strings.ToLower(name)
 	normalizedName = strings.ReplaceAll(normalizedName, " ", "-")
 	normalizedName = strings.ReplaceAll(normalizedName, ":", "")
